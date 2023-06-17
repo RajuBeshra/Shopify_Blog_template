@@ -1,0 +1,69 @@
+{% comment %}
+  Snippet can be used in section or block
+  eg. {% include 'include-image-with-text-overlay' %}
+{% endcomment %}
+
+{% comment %}Assign object as block or section{% endcomment %}
+
+{% if type == 'block' %}
+  {% assign object = block %}
+{% else %}
+  {% assign object = section %}
+{% endif %}
+
+{% assign id = object.id %}
+
+{% assign wide_display = object.settings.image_stretch %}
+{% assign image = object.settings.image %}
+{% assign title = object.settings.title | escape %}
+{% assign subtext = object.settings.subtext %}
+{% assign text_position = object.settings.text_position %}
+{% assign text_alignment = object.settings.text_align %}
+{% assign button_label = object.settings.button_label | escape %}
+{% assign link = object.settings.link %}
+{% assign enable_padding = object.settings.enable_padding %}
+
+<section class="{% if wide_display == false %}container wide_display--false{% endif %} {% if enable_padding == true %}enable_padding--true{% endif %}">
+  <div class="banner-section {% if wide_display == false %}sixteen columns{% endif %}">
+    {% if link != blank %}
+      <a href="{{ link }}">
+    {% endif %}
+    {% if image != nil %}
+      {% render 'image-element',
+              image: image,
+              alt: image.alt,
+              stretch_width: true,
+              additional_classes: 'banner-section__image'
+      %}
+    {% else %}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg placeholder-svg--banner' }}
+    {% endif %}
+
+    {% if link != blank %}
+      </a>
+    {% endif %}
+    {% if image != blank or title != blank or subtext != blank or button_label != blank %}
+      <div class="banner-section__caption">
+        <div class="container">
+          <div class="columns {% if text_position == 'left' %} eight offset-by-one {% elsif text_position == 'right' %} seven offset-by-eight {% else %} ten offset-by-three {% endif %} text-align--{{ text_alignment }}">
+            {% if title != blank %}
+              <h1 class="banner-section__caption-headline">
+                {{ title }}
+              </h1>
+            {% endif %}
+            {% if subtext != blank %}
+              <div class="banner-section__caption-subtitle">
+                {{ subtext }}
+              </div>
+            {% endif %}
+            {% if button_label != blank %}
+              <a href="{{ link }}" class="banner-section__caption-button action_button">
+                {{ button_label }}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</section>

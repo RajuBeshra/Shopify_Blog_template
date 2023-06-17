@@ -1,0 +1,55 @@
+{% comment %}
+  Snippet can be used in section or block
+  eg. {% include 'include-image-text' %}
+{% endcomment %}
+
+{% comment %}Assign object as block or section{% endcomment %}
+
+{% if type == 'block' %}
+  {% assign object = block %}
+{% else %}
+  {% assign object = section %}
+{% endif %}
+
+{% assign id = object.id %}
+
+{% assign text = object.settings.text %}
+{% assign image = object.settings.image %}
+{% assign layout = object.settings.layout %}
+{% assign title = object.settings.title | escape %}
+{% assign text_alignment = object.settings.text_alignment %}
+{% assign button_label = object.settings.button_label | escape %}
+{% assign button_link = object.settings.button_link %}
+
+<div class="container image-with-text flex-container image-position--{{ layout }} text-align--{{ text_alignment }}">
+  <div class="eight columns image_column">
+    {% if image != blank %}
+      {% render 'image-element',
+              image: image,
+              alt: image.alt
+      %}
+    {% else %}
+      {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+    {% endif %}
+  </div>
+
+  <div class="eight columns content_column">
+    {% if title != blank %}
+      <h3 class="text-align--{{ text_alignment }}">
+        {{ title }}
+      </h3>
+    {% endif %}
+
+    {% if text != blank %}
+      <span class="trim-last-paragraph">
+        {{ text }}
+      </span>
+    {% endif %}
+
+    {% if button_label != blank and button_link != blank %}
+      <a href="{{ button_link }}" class="action_button">
+        {{ button_label }}
+      </a>
+    {% endif %}
+  </div>
+</div>

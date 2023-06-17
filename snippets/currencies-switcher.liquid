@@ -1,0 +1,66 @@
+{% comment %}
+Optional values
+additional_classes: <string>
+{% endcomment %}
+
+{% if currency_selector == true or locale_selector == true %}
+{%- form 'localization', class: 'selectors-form' -%}
+<div class="localization {{ additional_classes }}">
+  <div class="selectors-form__wrap">
+    {%- if locale_selector == true -%}
+      <div class="selectors-form__item selectors-form__locale">
+        <h2 class="hidden" id="lang-heading">
+          {{ 'general.language.dropdown_label' | t }}
+        </h2>
+
+        <input type="hidden" name="locale_code" id="LocaleSelector" value="{{ form.current_locale.iso_code }}" data-disclosure-input/>
+
+        <div class="disclosure disclosure--i18n" data-disclosure data-disclosure-locale>
+          <button type="button" class="disclosure__toggle disclosure__toggle--i18n" aria-expanded="false" aria-controls="lang-list" aria-describedby="lang-heading" data-disclosure-toggle>
+            {{ form.current_locale.endonym_name }} <span class="icon-down-arrow"></span>
+          </button>
+          <div class="disclosure__list-wrap animated fadeIn">
+            <ul id="lang-list" class="disclosure-list" data-disclosure-list>
+              {% for locale in form.available_locales %}
+                <li class="disclosure-list__item {% if locale.iso_code == form.current_locale.iso_code %}disclosure-list__item--current{% endif %}">
+                  <button type="submit" class="disclosure__button" name="locale_code" value="{{ locale.iso_code }}">
+                    {{ locale.endonym_name }}
+                  </button>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+
+    {%- if currency_selector == true -%}
+      <div class="selectors-form__item selectors-form__currency">
+        <h2 class="hidden" id="currency-heading">
+          {{ 'general.currency.dropdown_label' | t }}
+        </h2>
+
+        <input type="hidden" name="currency_code" id="CurrencySelector" value="{{ form.current_currency.iso_code }}" data-disclosure-input/>
+
+        <div class="disclosure disclosure--currency" data-disclosure data-disclosure-currency>
+          <button type="button" class="disclosure__toggle disclosure__toggle--currency" aria-expanded="false" aria-controls="currency-list" aria-describedby="currency-heading" data-disclosure-toggle>
+            {{ form.current_currency.iso_code }} {%- if form.current_currency.symbol -%}{{ form.current_currency.symbol }}{%- endif -%} <span class="icon-down-arrow"></span>
+          </button>
+          <div class="disclosure__list-wrap animated fadeIn">
+            <ul id="currency-list" class="disclosure-list" data-disclosure-list>
+              {% for currency in form.available_currencies %}
+                <li class="disclosure-list__item {% if currency.iso_code == form.current_currency.iso_code %}disclosure-list__item--current{% endif %}">
+                  <button type="submit" class="disclosure__button" name="currency_code" value="{{ currency.iso_code }}">
+                    {{ currency.iso_code }} {%- if currency.symbol -%}{{ currency.symbol }}{%- endif -%}
+                  </button>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        </div>
+      </div>
+    {%- endif -%}
+  </div>
+</div>
+{%- endform -%}
+{% endif %}

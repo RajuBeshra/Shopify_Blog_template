@@ -1,0 +1,110 @@
+{% comment %}
+  Snippet can be used in section or block
+  eg. {% include 'include-video' %}
+{% endcomment %}
+
+{% comment %}Assign object as block or section{% endcomment %}
+
+{% if type == 'block' %}
+  {% assign object = block %}
+{% else %}
+  {% assign object = section %}
+{% endif %}
+
+{% assign id = object.id %}
+
+{% assign wide_display = object.settings.wide_display %}
+{% assign aspect_ratio = object.settings.aspect_ratio %}
+{% assign autoplay = object.settings.autoplay %}
+{% assign autoloop = object.settings.autoloop %}
+{% assign mute_video = object.settings.mute_video %}
+{% assign enable_padding = object.settings.enable_padding %}
+{% assign video_controls = object.settings.video_controls %}
+{% assign darken_video = object.settings.video_dark_overlay %}
+{% assign image = object.settings.image %}
+{% assign text_alignment = object.settings.text_align %}
+{% assign text_position = object.settings.text_position %}
+{% assign title = object.settings.title | escape %}
+{% assign subtitle = object.settings.subtext %}
+{% assign button_label = object.settings.button_label | escape %}
+{% assign link = object.settings.link %}
+{% assign display_text_over_video = object.settings.display_text_over_video %}
+{% assign iframe_video = object.settings.video %}
+{% assign html5_video = object.settings.html5_video %}
+
+{% comment %} HTML markup {% endcomment %}
+<section class="{% unless wide_display %}container{% endunless %} {% if enable_padding == true %}enable_padding--true{% endif %}">
+  <div class="video-wrapper banner-section
+        video-controls-enabled--{{ video_controls }}
+        darken-video--{{ darken_video }}"
+        id="video-{{ id }}"
+        data-autoplay="{{ autoplay }}"
+        data-autoloop="{{ autoloop }}"
+        data-mute-video="{{ mute_video }}"
+        data-video-src="{{ iframe_video.id }}"
+        data-aspect-ratio="{{ aspect_ratio }}"
+        data-poster-image-uploaded="{% if image != blank %}true{% else %}false{% endif%}"
+  >
+    <div class="video__overlay"></div>
+    {% comment %} Add div for placeholder / poster image {% endcomment %}
+    {% if image %}
+      <div class="video-wrapper__image">
+        {% render 'image-element',
+                image: image,
+                alt: image.alt,
+                stretch_width: true
+        %}
+      </div>
+    {% else %}
+      <div class="video-wrapper__image">
+        {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg placeholder-svg--video' }}
+      </div>
+    {% endif %}
+
+    {% comment %} Checks there is an iframe video (YouTube or Vimeo) {% endcomment %}
+    {% if iframe_video != blank %}
+      {% if iframe_video.type == 'vimeo' %}
+        <div class="plyr__video-embed" id="video-{{ id }}" data-video-element data-external-video>
+          <iframe src="https://player.vimeo.com/video/{{ iframe_video.id }}?loop=false&amp;byline=false&amp;portrait=false&amp;title=false&amp;speed=true&amp;transparent=0&amp;gesture=media" allowfullscreen allowtransparency allow="autoplay"></iframe>
+        </div>
+      {% elsif iframe_video.type == 'youtube' %}
+        <div class="plyr__video-embed" id="video-{{ id }}" data-video-element data-external-video>
+          <iframe src="https://www.youtube.com/embed/{{ iframe_video.id }}?origin=https://plyr.io&amp;iv_load_policy=3&amp;modestbranding=1&amp;playsinline=1&amp;showinfo=0&amp;rel=0&amp;enablejsapi=1" allowfullscreen allowtransparency allow="autoplay"></iframe>
+        </div>
+      {% endif %}
+    {% comment %} Checks there is an HTML5 video {% endcomment %}
+    {% elsif html5_video != blank %}
+      <video class="video-{{ id }}" data-video-element data-html5-video>
+        <source src="{{ html5_video }}">
+      </video>
+    {% endif %}
+
+    <div class="video__text-container display-text-over-video--{{ display_text_over_video }}" data-video-text-container>
+      <div class="video__text">
+        <div class="text-outer-wrapper">
+          <div class="container">
+            <div class="columns
+                {% if text_position == 'left' %} nine offset-by-one {% elsif text_position == 'right' %} eight offset-by-seven  {% else %} ten offset-by-three {% endif %}
+                video__text-wrapper text-align-{{ text_alignment }}">
+              {% if title != blank %}
+                <h1 class="headline" data-video-text>
+                  {{ title }}
+                </h1>
+              {% endif %}
+              {% if subtitle != blank %}
+                <div class="subtitle" data-video-text>
+                  {{ subtitle }}
+                </div>
+              {% endif %}
+              {% if button_label != blank %}
+                <a class="action_button" data-play-button {% if link != blank %}href="{{ link }}"{% endif %}>
+                  {{ button_label }}
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

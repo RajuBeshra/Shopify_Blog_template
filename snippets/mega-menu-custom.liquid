@@ -1,0 +1,41 @@
+<div class="megaMenu-column megaMenu-custom-column">
+  {% if column_title != blank %}
+    <h3 class="megaMenu-subtitle">
+      {% unless column_link == 'http://' or column_link == '' or column_link == '/' or column_link == 'https://' or column_link == '#' %}
+        <a href="{{ column_link }}">
+      {% endunless %}
+        {{ column_title }}
+      {% unless column_link == 'http://' or column_link == '' or column_link == '/' or column_link == 'https://' or column_link == '#' %}
+        </a>
+      {% endunless %}
+    </h3>
+  {% endif %}
+
+  {% unless column_link == 'http://' or column_link == '' or column_link == '/' or column_link == 'https://' or column_link == '#' %}
+    <a href="{{ column_link }}">
+  {% endunless %}
+
+  {% if column_image %}
+    {% render 'image-element',
+            image: column_image.src,
+            alt: column_image.src.alt,
+            additional_classes: 'megaMenu-image'
+    %}
+  {% endif %}
+
+  {% unless column_link == 'http://' or column_link == '' or column_link == '/' or column_link == 'https://' or column_link == '#' %}
+    </a>
+  {% endunless %}
+
+  <div class="megaMenu-text">
+    {% if column_text != blank %}
+      {% if column_link != blank %}
+        <a href="{{ column_link }}">
+      {% endif %}
+      <p>{{ column_text }}</p>
+      {% if column_link != blank %}
+        </a>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>

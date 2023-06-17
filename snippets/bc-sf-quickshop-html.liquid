@@ -1,0 +1,91 @@
+{% if settings.quick_shop_enabled %}
+  {% if product.description contains "#tab1" %}
+    {% assign tabs = true %}
+  {% else %}
+    {% assign tabs = false %}
+  {% endif %}
+
+  <div id="product-{{ product.id }}" class="modal product-{{ product.id }}">
+    <div class="container section" style="width: inherit">
+      <div class="eight columns modal_image flex-active-slide">
+        {% assign featured_image = product.selected_or_first_available_variant.featured_image | default: product.featured_image %}
+        <img  src="{{ featured_image | product_img_url: '580x', scale: 2 }}"
+              class="lazyload lazyload--fade-in"
+              alt="{{ alt_text | escape }}" />
+      </div>
+      <div class="six columns">
+        <h3>{{ product.title }}</h3>
+        {% if settings.enable_shopify_product_badges %}
+          <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+        {% endif %}
+        {% if settings.display_vendor_collection %}
+          <p class="vendor">
+            <span>{{ product.vendor | link_to_vendor }}</span>
+          </p>
+        {% endif %}
+
+        {% include 'size-chart-popup' %}
+
+        {% assign variant = product.selected_or_first_available_variant %}
+
+        {% unless collection_handles contains 'coming-soon' %}
+          <p class="modal_price">
+            <span class="sold_out">{% if variant.available == false %}{{ 'products.product.sold_out' | t }}{% endif %}</span>
+            <span class="{% if variant.compare_at_price > variant.price %}sale{% endif %}">
+              <span class="current_price {% if product.available == false %}hidden{% endif %}">
+                {% if variant.price > 0 %}
+                  <span class="money">{{ variant.price | money }}</span>
+                {% else %}
+                  {{ settings.free_price_text }}
+                {% endif %}
+              </span>
+            </span>
+            <span class="was_price">
+              {% if variant.price < variant.compare_at_price and variant.available %}
+                <span class="money">{{ variant.compare_at_price | money }}</span>
+              {% endif %}
+            </span>
+          </p>
+
+          {% include 'product-notify-me' %}
+        {% endunless %}
+
+        {% if settings.product_description_position == "top" %}
+          {% if settings.description_words == "none" %}
+            {{ product.description | split: '<!-- split -->' | first }}
+          {% else %}
+            {% if tabs %}
+              {{ product.description | split: '<!-- split -->' | first }}
+            {% else %}
+              <p>{{ product.description | strip_html | truncatewords: settings.description_words }}</p>
+            {% endif %}
+          {% endif %}
+          <p>
+            <a href="{{ product.url | within: collection }}" class="view_product_info" title="{{ product.title | escape }}">{{ 'collections.general.view_product_details_html' | t }}</a>
+          </p>
+          <hr />
+        {% endif %}
+
+        {% unless collection_handles contains 'coming-soon' %}
+          {% include 'product-form', show_payment_button_quickshop: settings.show_payment_button %}
+        {% endunless %}
+
+        {% if settings.product_description_position == "bottom" %}
+          <hr />
+          {% if settings.description_words == "none" %}
+            {{ product.description | split: '<!-- split -->' | first }}
+          {% else %}
+            {% if tabs %}
+              {{ product.description | split: '<!-- split -->' | first }}
+            {% else %}
+              <p>{{ product.description | strip_html | truncatewords: settings.description_words }}</p>
+            {% endif %}
+          {% endif %}
+          <p>
+            <a href="{{ product.url | within: collection }}" class="view_product_info" title="{{ product.title | escape }}">{{ 'collections.general.view_product_details_html' | t }}</a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

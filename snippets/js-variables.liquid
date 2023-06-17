@@ -1,0 +1,45 @@
+{% capture js_variables %}
+
+Shopify = window.Shopify || {};
+
+{% comment %} /* # Theme settings
+================================================== */ {% endcomment %}
+Shopify.theme_settings = {};
+
+Shopify.theme_settings.current_locale = "{{ request.locale.iso_code }}";
+Shopify.theme_settings.shop_url = "{{ shop.url }}";
+
+{% comment %} /* # Translation
+================================================== */ {% endcomment %}
+Shopify.translation = Shopify.translation || {};
+
+{% comment %} Newsletter {% endcomment %}
+Shopify.translation.newsletter_success_text = "{{ 'general.newsletter_form.success_text' | t | strip_newlines | escape }}";
+
+{% comment %} Layout {% endcomment %}
+Shopify.translation.menu = "{{ 'layout.general.menu' | t | strip_newlines | escape }}";
+
+{% comment %} Cart {% endcomment %}
+Shopify.translation.agree_to_terms_warning = "{{ 'cart.general.agree_to_terms_warning' | t | strip_newlines | escape }}";
+Shopify.translation.cart_discount = "{{ 'cart.general.discount' | t | strip_newlines | escape }}";
+Shopify.translation.edit_cart = "{{ 'layout.general.edit_cart' | t | strip_newlines | escape }}";
+Shopify.translation.add_to_cart_success = "{{ 'layout.general.add_to_cart_success' | t | strip_newlines | escape }}";
+Shopify.translation.agree_to_terms_html = "{{ 'cart.general.agree_to_terms_html' | t | strip_newlines | escape }}";
+Shopify.translation.checkout = "{{ 'layout.general.checkout' | t | strip_newlines | escape }}";
+Shopify.translation.or = "{{ 'layout.general.or' | t | strip_newlines | escape }}";
+Shopify.translation.continue_shopping = "{{ 'layout.general.continue_shopping' | t | strip_newlines | escape }}";
+
+{% comment %} Product {% endcomment %}
+Shopify.translation.product_add_to_cart_success = "{{ 'products.product.add_to_cart_success' | t | strip_newlines | escape }}";
+Shopify.translation.product_add_to_cart = "{{ 'products.product.add_to_cart' | t | strip_newlines | escape }}";
+Shopify.translation.product_notify_form_email = "{{ 'products.notify_form.email' | t | strip_newlines | escape }}";
+Shopify.translation.product_notify_form_send = "{{ 'products.notify_form.send' | t | strip_newlines | escape }}";
+Shopify.translation.items_left_count_one = "{{ 'products.product.items_left_count.one' | t | strip_newlines | escape }}";
+Shopify.translation.items_left_count_other = "{{ 'products.product.items_left_count.other' | t | strip_newlines | escape }}";
+Shopify.translation.product_sold_out = "{{ 'products.product.sold_out' | t | strip_newlines | escape }}";
+Shopify.translation.product_unavailable = "{{ 'products.product.unavailable' | t | strip_newlines | escape }}";
+Shopify.translation.product_notify_form_success = "{{ 'products.notify_form.post_success' | t | strip_newlines | escape }}";
+
+{% endcapture %}
+{%- assign js_variables = js_variables | split: 'Shopify.' -%}
+{%- for variable in js_variables -%}{%- assign variableblock = variable | strip -%}{% if forloop.first %}{{ variableblock }}{% else %}{{ variableblock | prepend: 'Shopify.' }}{% endif %}{%- endfor -%}
