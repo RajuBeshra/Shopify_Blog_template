@@ -1,0 +1,50 @@
+{% comment %}
+  The contents of the blog.liquid template can be found in /sections/blog-template.liquid
+{% endcomment %}
+
+{% section 'blog-template' %}
+
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Blog",
+  "name": "{{ blog.title | escape }}",
+  "url": "{{ shop.url }}{{ blog.url }}",
+  "blogPosts": [
+    {% for article in blog.articles %}
+      {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "{{ article.title | escape }}",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "{{ article.url }}"
+        },
+        {% if article.image %}
+          "image": {
+            "@type": "ImageObject",
+            "url": "{{ article.image | img_url: '800x' }}"
+          },
+        {% endif %}
+        "datePublished": "{{ article.published_at | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+        "dateCreated": "{{ article.created_at | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+        "dateModified": "{{ article.updated_at | date: '%Y-%m-%dT%H:%M:%SZ' }}",
+        "author": {
+          "@type": "Person",
+          "name": "{{ article.author }}"
+        },
+        "publisher": {
+          "@type": "Organization",
+          {% if settings.organization_logo %}
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https:{{ settings.organization_logo | img_url: '112x' }}"
+            },
+          {% endif %}
+          "name": "{{ shop.name }}"
+        }
+      } {%- unless forloop.last -%},{%- endunless -%}
+    {% endfor %}
+  ]
+}
+</script>
