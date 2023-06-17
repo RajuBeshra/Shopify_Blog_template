@@ -1,0 +1,262 @@
+{%- assign locale_selector = false -%}
+{%- assign currency_selector = false -%}
+
+{%- if section.settings.show_currency_selector == true and shop.enabled_currencies.size > 1 -%}
+  {%- assign currency_selector = true -%}
+{%- endif -%}
+
+{%- if section.settings.show_locale_selector == true and shop.published_locales.size > 1 -%}
+  {%- assign locale_selector = true -%}
+{%- endif -%}
+
+<footer class="footer lazyload bcg text-align--{{ section.settings.footer_alignment }}">
+  <div class="container">
+    <div class="sixteen columns">
+
+      {% if linklists[section.settings.footer_linklist_2] != blank %}
+        <div class="three columns alpha footer_menu_vertical">
+          <h6>{{ linklists[section.settings.footer_linklist_2].title }}</h6>
+          <ul>
+            {% for link in linklists[section.settings.footer_linklist_2].links %}
+              <li>
+                <a href="{{ link.url }}">{{ link.title }}</a>
+              </li>
+              {% for sub_link in link.links %}
+                <li>
+                  <a href="{{ sub_link.url }}">{{ sub_link.title }}</a>
+                </li>
+                {% for sub_sub_link in sub_link.links %}
+                  <li>
+                    <a href="{{ sub_sub_link.url }}">{{ sub_sub_link.title }}</a>
+                  </li>
+                {% endfor %}
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="ten columns {% if linklists[section.settings.footer_linklist_2] == blank %}offset-by-three alpha{% endif %} center">
+        {% if section.settings.footer_newsletter %}
+          <h6>{{section.settings.newsletter_heading}}</h6>
+          {% if section.settings.newsletter_richtext != blank %}
+            <div class="newsletter-text">{{ section.settings.newsletter_richtext }}</div>
+          {% endif %}
+          {% render 'newsletter', context: 'footer' %}
+        {% endif %}
+        {% if section.settings.footer_social_icons %}
+          <div class="social_icons">
+            {% render 'social-icons' %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="three columns omega footer_content_page">
+        {% if section.settings.title != blank %}
+          <h6>{{ section.settings.title }}</h6>
+        {% endif %}
+
+        {% if section.settings.footer_content_right != blank %}
+          {{ section.settings.footer_content_right }}
+        {% endif %}
+
+        {% if section.settings.footer_content_page != blank %}
+          <h6>{{ pages[section.settings.footer_content_page].title }}</h6>
+          {{ pages[section.settings.footer_content_page].content }}
+        {% endif %}
+      </div>
+
+      <div class="sixteen columns alpha omega center">
+        <div class="section">
+          {% if section.settings.footer_social_icons %}
+            <hr />
+          {% endif %}
+
+          {% if linklists[section.settings.footer_linklist_1] != blank %}
+            <ul class="footer_menu">
+              {% for link in linklists[section.settings.footer_linklist_1].links %}
+                <li>
+                  <a href="{{ link.url }}">{{ link.title }}</a>
+                </li>
+                {% for sub_link in link.links %}
+                  <li>
+                    <a href="{{ sub_link.url }}">{{ sub_link.title }}</a>
+                  </li>
+                  {% for sub_sub_link in sub_link.links %}
+                    <li>
+                      <a href="{{ sub_sub_link.url }}">{{ sub_sub_link.title }}</a>
+                    </li>
+                  {% endfor %}
+                {% endfor %}
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          {% if currency_selector == true or locale_selector == true %}
+            {% render 'currencies-switcher',
+                locale_selector: locale_selector,
+                currency_selector: currency_selector
+            %}
+          {% endif %}
+
+          <p class="credits">
+            &copy; {{ "now" | date: "%Y" }} {{ shop.name | link_to: '/' }}.
+            {{ section.settings.copyright_text | escape }}
+            {{ powered_by_link }}
+          </p>
+
+          {% if section.settings.display_payment_methods %}
+            <div class="payment_methods">
+              {% for type in shop.enabled_payment_types %}
+                {{ type | payment_type_svg_tag: class:'payment-icon' }}
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</footer> <!-- end footer -->
+
+{% schema %}
+{
+  "name": "Footer",
+  "class": "footer-section",
+  "settings": [
+   {
+      "type": "header",
+      "content": "Left column"
+    },
+    {
+      "type": "link_list",
+      "id": "footer_linklist_2",
+      "label": "Vertical menu",
+      "info": "This menu won't show drop-down items",
+      "default": "footer"
+    },
+    {
+      "type": "header",
+      "content": "Center column"
+    },
+    {
+      "type": "link_list",
+      "id": "footer_linklist_1",
+      "label": "Horizontal menu",
+      "info": "This menu won't show drop-down items"
+    },
+    {
+      "type": "header",
+      "content": "Right column"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Heading",
+      "default": "Title"
+    },
+    {
+      "type": "richtext",
+      "id": "footer_content_right",
+      "label": "Text"
+    },
+    {
+      "type": "page",
+      "id": "footer_content_page",
+      "label": "Content page"
+    },
+    {
+      "type": "select",
+      "id": "footer_alignment",
+      "label": "Text alignment",
+      "default": "center",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Newsletter"
+    },
+    {
+      "type": "checkbox",
+      "id": "footer_newsletter",
+      "label": "Show newsletter form",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "display_first_name",
+      "label": "Show first name",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "display_last_name",
+      "label": "Show last name",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Newsletter heading",
+      "default": "Sign up for our newsletter"
+    },
+    {
+      "type": "richtext",
+      "id": "newsletter_richtext",
+      "label": "Text",
+      "default": "<p>Sign up to get the latest on sales, new releases and more…</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "footer_social_icons",
+      "label": "Show social media footer icons",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Sub footer"
+    },
+    {
+      "type": "checkbox",
+      "id": "display_payment_methods",
+      "label": "Show payment method icons",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "copyright_text",
+      "label": "Copyright text"
+    },
+    {
+      "type": "header",
+      "content": "Language selector",
+      "info": "To add a language, go to your [language settings.](/admin/settings/languages)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_locale_selector",
+      "label": "Show language selector",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Currency selector",
+      "info": "To add a currency, go to your [payment settings.](/admin/settings/payments)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_currency_selector",
+      "label": "Show currency selector",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

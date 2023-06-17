@@ -1,0 +1,1536 @@
+{% comment %}
+  Assign related collection to the product's collection
+{% endcomment %}
+{% assign relatedCol = collection %}
+
+{% if section.settings.product_breadcrumb == false %}
+  {% style %}
+    .breadcrumb__wrapper {
+      display: none;
+    }
+  {% endstyle %}
+{% endif %}
+
+<div class="container">
+  <div class="sixteen columns product-{{ product.id }}">
+
+    <div class="section product_section js-product_section clearfix
+         is-flex media-position--{{ section.settings.product_images_position }}"
+         data-product-media-supported="{% if product.media != null %}true{% else %}false{% endif %}"
+         data-thumbnails-enabled="{{ section.settings.display_thumbnails }}"
+         data-gallery-arrows-enabled="{{ section.settings.gallery_arrows }}"
+         data-slideshow-speed="{{ section.settings.slideshow_speed }}"
+         data-slideshow-animation="{{ section.settings.slideshow_transition }}"
+         data-thumbnails-position="{{ section.settings.thumbnail_position }}"
+         data-thumbnails-slider-enabled="{{ section.settings.enable_thumbnail_slider }}"
+         data-activate-zoom="{{ section.settings.activate_zoom }}">
+
+      <div class="ten columns {% if section.settings.product_images_position == 'left' %}alpha{% else %}omega{% endif %}" data-initial-width="ten" data-sidebar-width="six">
+        {% render 'product-images',
+                video_looping: section.settings.video_looping,
+                set_product_height: section.settings.set_product_height
+        %}
+      </div>
+
+      <div class="six columns {% if section.settings.product_images_position == 'left' %}omega{% else %}alpha{% endif %}">
+        {% assign collection_handles = product.collections | map: 'handle' %}
+        {% assign variant = product.selected_or_first_available_variant %}
+        <h1 class="product__title">{{ product.title }}</h1>
+
+        {% if settings.enable_shopify_product_badges %}
+          <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+        {% endif %}
+
+        {% if section.settings.display_vendor %}
+          <p class="vendor">
+            <span>{{ product.vendor | link_to_vendor }}</span>
+          </p>
+        {% endif %}
+
+        {% if variant.sku != blank and section.settings.display_sku %}
+          <p class="sku">{{ variant.sku }}</p>
+        {% endif %}
+
+        {% render 'size-chart-popup' %}
+
+        <div class="product__price-container {% if variant.available == false %}product__price-container--sold-out{% endif %}">
+          {% if collection_handles contains 'coming-soon' %}
+            <p class="product__price">{{ 'collections.general.coming_soon' | t }}</p>
+          {% else %}
+            <p class="product__price">
+              <span content="{{ variant.price | money_without_currency | remove: "," }}" class="{% if variant.compare_at_price > variant.price %}sale{% endif %}">
+                <span class="current-price">
+                  {% if variant.price > 0 %}
+                    <span class="money">
+                      {% render 'price-element', price: variant.price %}
+                    </span>
+                  {% else %}
+                    {{ settings.free_price_text }}
+                  {% endif %}
+                </span>
+              </span>
+              <span class="was-price">
+                {% if variant.price < variant.compare_at_price and variant.available %}
+                  <span class="money">
+                    {% render 'price-element', price: variant.compare_at_price %}
+                  </span>
+                {% endif %}
+              </span>
+            </p>
+            <span class="sold-out-text">
+              {% if variant.available == false %}
+                &ndash; {{ 'products.product.sold_out' | t }}
+              {% endif %}
+            </span>
+          {% endif %}
+        </div>
+
+        {% unless collection_handles contains 'coming-soon' %}
+          {% render 'product-notify-me', product: product %}
+        {% endunless %}
+
+        {% if section.settings.product_description_position == "top" %}
+          {% if product.description != blank %}
+            <div class="description">
+              {{ product.description | split: '<!-- split -->' | first }}
+            </div>
+          {% endif %}
+        {% endif %}
+
+        {% unless collection_handles contains 'coming-soon' %}
+          {% render 'product-form', context: 'product' %}
+        {% endunless %}
+
+        {% if settings.enable_shopify_review_comments and settings.review_position == "top" %}
+          <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+        {% endif %}
+
+        {% if section.settings.product_description_position == "bottom" %}
+          {% if product.description != blank %}
+            <div class="description">
+              {{ product.description | split: '<!-- split -->' | first }}
+            </div>
+          {% endif %}
+        {% endif %}
+
+        {% if section.settings.display_collections or section.settings.display_tags or section.settings.display_type %}
+          <hr />
+        {% endif %}
+
+        <div class="meta">
+          {% if section.settings.display_collections %}
+            <p>
+              <span class="label">{{ 'products.product.collections' | t }}:</span>
+              <span>
+                {% for col in product.collections %}
+                  <a href="{{ col.url }}" title="{{ 'collections.general.link_title' | t: title: col.title }}">{{ col.title }}</a>{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+              </span>
+            </p>
+          {% endif %}
+
+          {% if section.settings.display_tags %}
+            <p>
+              {% for tag in product.tags %}
+                {% if forloop.first %}
+                  <span class="label">{{ 'products.product.tags' | t }}:</span>
+                {% endif %}
+
+                {% unless tag contains 'meta-' %}
+                  <span>
+                    <a href="{{ routes.collections_url }}/{% if collection %}{{ collection.handle }}{% else %}all{% endif %}/{{ tag | handle }}" title="{{ 'products.product.products_tagged' | t: tag: tag }}">{{ tag }}</a>{% unless forloop.last %},{% endunless %}
+                  </span>
+                {% endunless %}
+              {% endfor %}
+            </p>
+          {% endif %}
+
+          {% if section.settings.display_type %}
+            <p>
+              <span class="label">{{ 'products.product.product_types' | t }}:</span> <span>{{ product.type | link_to_type }}</span>
+            </p>
+          {% endif %}
+        </div>
+
+        <div class="social_links">
+          {% if section.settings.display_social_buttons %}
+            {% render 'social-buttons', context: 'product' %}
+          {% endif %}
+        </div>
+
+        {% if collection %}
+          <hr />
+          <p class="meta clearfix">
+            {% if collection.next_product %}
+              {% capture next_url %}{{ collection.next_product }}{% endcapture %}
+              <span class="right">
+                {{ 'products.general.next_product_html' | t | link_to: next_url }}
+              </span>
+            {% endif %}
+
+            {% if collection.previous_product %}
+              {% capture prev_url %}{{ collection.previous_product }}{% endcapture %}
+              <span class="left">
+                {{ 'products.general.previous_product_html' | t | link_to: prev_url }}
+              </span>
+            {% endif %}
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if product.description contains "<!-- split -->"  %}
+      <br class="clear" />
+      <div class="section clearfix">
+        <div class="description">
+          {{ product.description | split: '<!-- split -->' | last }}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="sixteen columns">
+    {% if settings.enable_shopify_review_comments and settings.review_position == "bottom" %}
+      <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="product-details details-section">
+  {% for block in section.blocks %}
+
+    <div id="block__{{ block.id }}" class="block__{{ block.id }} product-details-block block_{{ block.type }} {% if block.type == 'image_with_text_overlay' or block.type == 'image_with_text' or block.type == 'featured_video' or block.type == 'map' %} padding-toggle {% endif %}" {{ block.shopify_attributes }}>
+
+      {% if block.type == 'image_with_text_overlay' %}
+
+        {% include 'include-image-with-text-overlay', type: 'block' %}
+
+      {% elsif block.type == 'map' %}
+
+        {% include 'include-map', type: 'block' %}
+
+      {% elsif block.type == 'rich_text_and_image' %}
+
+        {% include 'include-featured-text', type: 'block' %}
+
+      {% elsif block.type == 'featured_collection' %}
+
+        {% include 'include-featured-collection', type: 'block' %}
+
+      {% elsif block.type == 'featured_product' %}
+
+        {% include 'include-featured-product', type: 'block' %}
+
+      {% elsif block.type == 'blog_posts' %}
+
+        {% include 'include-blog-post', type: 'block' %}
+
+      {% elsif block.type == 'image_gallery' %}
+
+        <div class="container">
+          <div class="sixteen columns">
+            <div class="one-third column alpha thumbnail">
+              {% if block.settings.page_detail_image_1 %}
+                <a href="{{ block.settings.page_detail_image_1 | img_url: '1520x' }}" class="lightbox" rel="detail-gallery">
+                  {% render 'image-element',
+                          image: block.settings.page_detail_image_1,
+                          alt: block.settings.page_detail_image_1.alt
+                  %}
+                </a>
+              {% else %}
+                {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+              {% endif %}
+            </div>
+            <div class="one-third column thumbnail">
+              {% if block.settings.page_detail_image_2 %}
+                <a href="{{ block.settings.page_detail_image_2 | img_url: '1520x' }}" class="lightbox" rel="detail-gallery">
+                  {% render 'image-element',
+                          image: block.settings.page_detail_image_2,
+                          alt: block.settings.page_detail_image_2.alt
+                  %}
+                </a>
+              {% else %}
+                {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+              {% endif %}
+            </div>
+            <div class="one-third column omega thumbnail">
+              {% if block.settings.page_detail_image_3 %}
+                <a href="{{ block.settings.page_detail_image_3 | img_url: '1520x' }}" class="lightbox" rel="detail-gallery">
+                  {% render 'image-element',
+                          image: block.settings.page_detail_image_3,
+                          alt: block.settings.page_detail_image_3.alt
+                  %}
+                </a>
+              {% else %}
+                {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+      {% elsif block.type == 'divider' %}
+
+        {% include 'include-divider', type: 'block' %}
+
+      {% elsif block.type == 'featured_video' %}
+
+        {% include 'include-video', type: 'block' %}
+
+      {% elsif block.type == 'page' %}
+
+        {% include 'include-content', type: 'block' %}
+
+      {% elsif block.type == "contact_form" %}
+
+        {% include 'include-contact-form', type: 'block' %}
+
+      {% elsif block.type == 'quote' %}
+
+        <div class="container">
+          <div class="sixteen columns">
+            <div class="page-quote">
+              {{ block.settings.page_quote }}
+            </div>
+          </div>
+        </div>
+
+      {% elsif block.type == 'image_with_text' %}
+
+        {% include 'include-image-text', type: 'block' %}
+
+      {% elsif block.type == 'custom_html' %}
+
+        {% include 'include-custom-html', type: 'block' %}
+
+      {% endif %}
+
+    </div>
+
+  {% endfor %}
+</div>
+
+{% if section.settings.set_product_height %}
+  {% style %}
+    .product_slider model-viewer {
+      min-height: {{ section.settings.product_height }}px;
+    }
+
+    .product_slider .product-gallery__main img,
+    .product_slider .product-gallery__main .plyr--html5 video,
+    .product_slider .product-gallery__main .plyr--youtube {
+      max-height: {{ section.settings.product_height }}px;
+    }
+  {% endstyle %}
+{% endif %}
+
+{% style %}
+  .shopify-model-viewer-ui model-viewer {
+    --progress-bar-height: 2px;
+    --progress-bar-color: {{ settings.regular_color }};
+  }
+{% endstyle %}
+
+{% if product.media %}
+  <script>
+    window.ShopifyXR=window.ShopifyXR||function(){(ShopifyXR.q=ShopifyXR.q||[]).push(arguments)}
+      {% assign models = product.media | where: 'media_type', 'model' | json %}
+      ShopifyXR('addModels', {{ models }});
+  </script>
+{% endif %}
+
+{% schema %}
+  {
+    "name": "Product",
+    "class": "product-template-section padding-toggle",
+    "max_blocks": 20,
+    "settings": [
+    {
+      "type": "checkbox",
+      "id": "product_breadcrumb",
+      "label": "Show breadcrumb links",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Product gallery"
+    },
+    {
+      "type": "checkbox",
+      "id": "display_thumbnails",
+      "label": "Show thumbnails",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "gallery_arrows",
+      "label": "Show arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "activate_zoom",
+      "label": "Magnify product images on hover",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "slideshow_speed",
+      "label": "Gallery speed",
+      "min": 0,
+      "max": 6,
+      "unit": "sec",
+      "default": 0,
+      "info": "Set to 0 to disable autoplay."
+    },
+    {
+      "type": "select",
+      "id": "slideshow_transition",
+      "label": "Gallery transition",
+      "default": "slide",
+      "options": [
+        {
+          "value": "slide",
+          "label": "Slide"
+        },
+        {
+          "value": "fade",
+          "label": "Fade"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "thumbnail_position",
+      "label": "Thumbnails",
+      "default": "bottom-thumbnails",
+      "options": [
+        {
+          "value": "left-thumbnails",
+          "label": "Left"
+        },
+        {
+          "value": "right-thumbnails",
+          "label": "Right"
+        },
+        {
+          "value": "bottom-thumbnails",
+          "label": "Bottom"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_thumbnail_slider",
+      "label": "Enable thumbnail slider",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Product information"
+    },
+    {
+      "type": "checkbox",
+      "id": "display_tags",
+      "label": "Show tags",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_type",
+      "label": "Show type",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_vendor",
+      "label": "Show vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_sku",
+      "label": "Show SKU",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_social_buttons",
+      "label": "Show social media share icons",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "display_collections",
+      "label": "Show collections",
+      "default": false
+    },
+    {
+      "type": "radio",
+      "id": "product_description_position",
+      "label": "Description position",
+      "default": "top",
+      "options": [
+        {
+          "value": "top",
+          "label": "Above 'add to cart'"
+        },
+        {
+          "value": "bottom",
+          "label": "Below 'add to cart'"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Dynamic checkout button"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_button",
+      "label": "Show dynamic checkout button",
+      "default": true,
+      "info": "Each customer will see their preferred payment method from those available on your store, such as PayPal or Apple Pay. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)"
+    },
+    {
+      "type": "header",
+      "content": "Media",
+      "info": "Learn more about [media types](https://help.shopify.com/en/manual/products/product-media)"
+    },
+    {
+      "type": "radio",
+      "id": "product_images_position",
+      "label": "Media position",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "set_product_height",
+      "label": "Set height of product media",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "product_height",
+      "label": "Product media height",
+      "min": 200,
+      "max": 800,
+      "step": 10,
+      "default": 500,
+      "unit": "px"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_looping",
+      "label": "Enable video looping",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "blog_posts",
+      "name": "Blog posts",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Blog posts"
+        },
+        {
+          "type": "blog",
+          "id": "blog_widget_select",
+          "label": "Blog"
+        },
+        {
+          "type": "range",
+          "id": "home_page_articles",
+          "label": "Posts",
+          "min": 2,
+          "max": 4,
+          "step": 1,
+          "default": 3
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_tags",
+          "label": "Show article tags"
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_author",
+          "label": "Show author"
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_date",
+          "label": "Show date",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "blog_comment_count",
+          "label": "Show comment count",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "read_more_link",
+          "label": "Show continue reading link for article excerpts",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "contact_form",
+      "name": "Contact form",
+      "settings": [
+        {
+          "type": "text",
+          "id": "contact_heading",
+          "label": "Heading",
+          "default": "Get in touch"
+        },
+        {
+          "type": "text",
+          "id": "contact_subheading",
+          "label": "Subheading",
+          "default": "Leave a message"
+        },
+        {
+          "type": "richtext",
+          "id": "contact_content",
+          "label": "Text",
+          "default": "<p>Use this text to include important information that you'd like your customers to be aware of when contacting you. You could include shop hours, email response times, other ways to contact you, or just some friendly text to encourage your customers to reach out.</p>"
+        },
+        {
+          "type": "select",
+          "id": "contact_text_position",
+          "label": "Text position",
+          "default": "left",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "contact_text_alignment",
+          "label": "Text alignment",
+          "default": "left",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "custom_html",
+      "name": "Custom HTML",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "custom_html",
+          "label": "HTML",
+          "default": "<div class='container'><h2 class='title'>Your own custom HTML</h2></div>"
+        }
+      ]
+    },
+    {
+      "type": "divider",
+      "name": "Divider",
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Add spacing in between your sections by using a divider."
+        },
+        {
+          "type": "range",
+          "id": "divider_spacing",
+          "min": 0,
+          "max": 30,
+          "step": 5,
+          "unit": "px",
+          "label": "Spacing",
+          "default": 20
+        },
+        {
+          "type": "checkbox",
+          "id": "divider_border",
+          "label": "Show border",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "featured_collection",
+      "name": "Featured collection",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Featured collection"
+        },
+        {
+          "type": "collection",
+          "id": "frontpage_collection",
+          "label": "Collection"
+        },
+        {
+          "type": "range",
+          "id": "frontpage_products_per_row",
+          "label": "Products per row",
+          "min": 2,
+          "max": 4,
+          "step": 1,
+          "default": 3
+        },
+        {
+          "type": "range",
+          "id": "frontpage_products_limit",
+          "label": "Limit products",
+          "min": 2,
+          "max": 50,
+          "step": 1,
+          "default": 9
+        }
+      ]
+    },
+    {
+      "type": "featured_product",
+      "name": "Featured product",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Featured product"
+        },
+        {
+          "type": "product",
+          "id": "featured_product",
+          "label": "Product"
+        },
+        {
+          "type": "header",
+          "content": "Product gallery"
+        },
+        {
+          "type": "checkbox",
+          "id": "display_thumbnails",
+          "label": "Show thumbnails",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "gallery_arrows",
+          "label": "Show arrows",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "activate_zoom",
+          "label": "Magnify product images on hover",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "slideshow_speed",
+          "label": "Gallery speed",
+          "min": 0,
+          "max": 6,
+          "unit": "sec",
+          "default": 0,
+          "info": "Set to 0 to disable autoplay."
+        },
+        {
+          "type": "select",
+          "id": "slideshow_transition",
+          "label": "Gallery transition",
+          "default": "slide",
+          "options": [
+            {
+              "value": "slide",
+              "label": "Slide"
+            },
+            {
+              "value": "fade",
+              "label": "Fade"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "thumbnail_position",
+          "label": "Thumbnails",
+          "default": "bottom-thumbnails",
+          "options": [
+            {
+              "value": "left-thumbnails",
+              "label": "Left"
+            },
+            {
+              "value": "right-thumbnails",
+              "label": "Right"
+            },
+            {
+              "value": "bottom-thumbnails",
+              "label": "Bottom"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_thumbnail_slider",
+          "label": "Enable thumbnail slider",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "Product information"
+        },
+        {
+          "type": "checkbox",
+          "id": "display_vendor",
+          "label": "Show vendor",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_description",
+          "label": "Show product description",
+          "default": true
+        },
+        {
+          "type": "radio",
+          "id": "product_description_position",
+          "label": "Description position",
+          "options": [
+            {
+              "value": "top",
+              "label": "Above 'add to cart'"
+            },
+            {
+              "value": "bottom",
+              "label": "Below 'add to cart'"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "Dynamic checkout button"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_payment_button",
+          "label": "Show dynamic checkout button",
+          "default": true,
+          "info": "Each customer will see their preferred payment method from those available on your store, such as PayPal or Apple Pay. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)"
+        },
+        {
+          "type": "header",
+          "content": "Media",
+          "info": "Learn more about [media types](https://help.shopify.com/en/manual/products/product-media)"
+        },
+        {
+          "type": "radio",
+          "id": "product_images_position",
+          "label": "Media position",
+          "default": "left",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "id": "set_product_height",
+          "label": "Set height of product media",
+          "default": false
+        },
+        {
+          "type": "range",
+          "id": "product_height",
+          "label": "Product media height",
+          "min": 200,
+          "max": 800,
+          "step": 10,
+          "default": 500,
+          "unit": "px"
+        },
+        {
+          "type": "checkbox",
+          "id": "video_looping",
+          "label": "Enable video looping",
+          "default": false
+        }
+      ]
+    },
+    {
+      "type": "featured_video",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Video"
+        },
+        {
+          "type": "checkbox",
+          "id": "wide_display",
+          "label": "Wide display",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_padding",
+          "label": "Enable padding",
+          "default": true
+        },
+        {
+          "type": "select",
+          "id": "aspect_ratio",
+          "label": "Aspect ratio",
+          "options": [
+            {
+              "value": "16:9",
+              "label": "16:9"
+            },
+            {
+              "value": "4:3",
+              "label": "4:3"
+            }
+          ],
+          "default": "16:9"
+        },
+        {
+          "type": "checkbox",
+          "id": "autoplay",
+          "label": "Autoplay video",
+          "default": false,
+          "info": "Limited browser support for autoplaying video. [Learn more](https:\/\/help.outofthesandbox.com\/hc\/en-us\/articles\/360000661568-Why-won-t-my-video-autoplay-)"
+        },
+        {
+          "type": "checkbox",
+          "id": "autoloop",
+          "label": "Autoloop video",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "mute_video",
+          "label": "Mute video",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "video_controls",
+          "label": "Show video controls",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "video_dark_overlay",
+          "label": "Darken video"
+        },
+        {
+          "type": "video_url",
+          "id": "video",
+          "label": "YouTube or Vimeo video URL",
+          "accept": ["youtube", "vimeo"],
+          "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc"
+        },
+        {
+          "type": "text",
+          "id": "html5_video",
+          "label": "HTML5 MP4/OGV File URL"
+        },
+        {
+          "type": "header",
+          "content": "Content"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "1600 x 900px recommended"
+        },
+        {
+          "type": "checkbox",
+          "id": "display_text_over_video",
+          "label": "Show text when video is playing",
+          "default": false
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "subtext",
+          "label": "Subheading",
+          "default": "<p></p>"
+        },
+        {
+          "type": "select",
+          "id": "text_position",
+          "label": "Text position",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "select",
+          "id": "text_align",
+          "label": "Text alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "default": "Play Video"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Button link"
+        }
+      ]
+    },
+    {
+      "type": "image_gallery",
+      "name": "Image gallery",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "page_detail_image_1",
+          "label": "Image 1",
+          "info": "760 x 500px wide recommended"
+        },
+        {
+          "type": "image_picker",
+          "id": "page_detail_image_2",
+          "label": "Image 2",
+          "info": "760 x 500px wide recommended"
+        },
+        {
+          "type": "image_picker",
+          "id": "page_detail_image_3",
+          "label": "Image 3",
+          "info": "760 x 500px wide recommended"
+        }
+      ]
+    },
+    {
+      "type": "image_with_text",
+      "name": "Image with text",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "select",
+          "id": "layout",
+          "label": "Image position",
+          "default": "left",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "Text alignment",
+          "default": "left",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Image with text"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Pair text with an image to give focus to your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button link"
+        }
+      ]
+    },
+    {
+      "type": "image_with_text_overlay",
+      "name": "Image with text overlay",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "image_stretch",
+          "label": "Wide display",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_padding",
+          "label": "Enable padding",
+          "default": true
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "1600 x 600px recommended"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading"
+        },
+        {
+          "type": "richtext",
+          "id": "subtext",
+          "label": "Text"
+        },
+        {
+          "type": "select",
+          "id": "text_position",
+          "label": "Text position",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "select",
+          "id": "text_align",
+          "label": "Text alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Button link"
+        }
+      ]
+    },
+    {
+      "type": "map",
+      "name": "Map",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "wide_display",
+          "label": "Wide display",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_padding",
+          "label": "Enable padding",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "map_address",
+          "label": "Map address",
+          "info": "Google Maps will find the exact location"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Come and visit"
+        },
+        {
+          "type": "richtext",
+          "id": "address_and_hours",
+          "label": "Address and hours",
+          "default": "<p>123 Fake Street</p><p>Toronto, Canada</p><p>Mon - Fri, 10am - 9pm</p><p>Saturday, 11am - 9pm</p><p>Sunday, 11am - 5pm</p>"
+        },
+        {
+          "type": "checkbox",
+          "id": "store_hours",
+          "label": "Show store hours",
+          "default": true
+        },
+        {
+          "type": "color",
+          "id": "info_text_color",
+          "label": "Text",
+          "default": "#000000"
+        },
+        {
+          "type": "color",
+          "id": "info_color",
+          "label": "Background",
+          "default": "#ffffff"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image",
+          "info": "Displayed if the map isn’t loaded"
+        },
+        {
+          "type": "header",
+          "content": "Layout"
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "Text alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "map_position",
+          "label": "Map position",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "right",
+              "label": "Right"
+            }
+          ]
+        },
+        {
+          "type": "range",
+          "id": "zoom_level",
+          "min": 1,
+          "max": 20,
+          "step": 1,
+          "unit": "x",
+          "label": "Map zoom level",
+          "default": 12
+        },
+        {
+          "type": "header",
+          "content": "API key"
+        },
+        {
+          "type": "text",
+          "id": "api_key",
+          "label": "Google Maps API key",
+          "info": "You’ll need to [register a Google Maps API Key](https://help.shopify.com/manual/using-themes/troubleshooting/map-section-api-key) to display the map"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_pin",
+          "label": "Show pin",
+          "info": "Requires use of API key",
+          "default": true
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Map link label",
+          "info": "Requires use of API key",
+          "default": "Directions"
+        },
+        {
+          "type": "select",
+          "id": "map_style",
+          "label": "Map color scheme",
+          "options": [
+            {
+              "value": "default",
+              "label": "Default"
+            },
+            {
+              "value": "aubergine",
+              "label": "Aubergine"
+            },
+            {
+              "value": "night",
+              "label": "Night"
+            },
+            {
+              "value": "retro",
+              "label": "Retro"
+            },
+            {
+              "value": "silver",
+              "label": "Silver"
+            }
+          ],
+          "default": "default",
+          "info": "Requires use of API key"
+        }
+      ]
+    },
+    {
+      "type": "page",
+      "name": "Page",
+      "settings": [
+        {
+          "type": "page",
+          "id": "content_page",
+          "label": "Content page"
+        }
+      ]
+    },
+    {
+      "type": "quote",
+      "name": "Quote",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "page_quote",
+          "label": "Text",
+          "default": "<p><i>Use this block for a quote, fun fact, announcement or other callout text.</i></p>"
+        }
+      ]
+    },
+    {
+      "type": "rich_text_and_image",
+      "name": "Rich text",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Logo",
+          "info": "600 x 600px recommended"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Heading",
+          "default": "Talk about your brand"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Text",
+          "default": "<p>Use this text to share information about your brand with your customers. Describe a product, share announcements, or welcome customers to your store.</p>"
+        },
+        {
+          "type": "select",
+          "id": "text_size",
+          "label": "Text size",
+          "options": [
+            {
+              "value": "regular_text",
+              "label": "Regular"
+            },
+            {
+              "value": "featured_text",
+              "label": "Large"
+            }
+          ],
+          "default": "featured_text"
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "Text alignment",
+          "options": [
+            {
+              "value": "left",
+              "label": "Left"
+            },
+            {
+              "value": "center",
+              "label": "Center"
+            }
+          ],
+          "default": "center"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button link"
+        }
+      ]
+    }
+  ],
+  "default": {
+    "settings": {
+    },
+    "blocks": [
+      {
+        "type": "rich_text_and_image",
+        "settings": {
+          "title": "This is an example headline",
+          "content": "<p>Vestibulum fringilla pede sit amet augue. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Integer tincidunt. Vestibulum turpis sem, aliquet eget, lobortis pellentesque, rutrum eu, nisl. Suspendisse potenti.</p>",
+          "text_alignment": "center",
+          "button_label": "Button"
+        }
+      },
+      {
+        "type": "divider",
+        "settings": {
+        }
+      },
+      {
+        "type": "image_gallery",
+        "settings": {
+        }
+      },
+      {
+        "type": "divider",
+        "settings": {
+        }
+      },
+      {
+        "type": "image_with_text",
+        "settings": {
+          "layout": "right",
+          "title": "Headline",
+          "text": "<p>Vestibulum fringilla pede sit amet augue. Pellentesque habitant morbi tristique senecrutrum eu, nisl.</p>",
+          "button_label": "Button"
+        }
+      },
+      {
+        "type": "divider",
+        "settings": {
+        }
+      }
+    ]
+  }
+}
+{% endschema %}

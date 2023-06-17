@@ -1,0 +1,397 @@
+{% if section.settings.product_breadcrumb == false %}
+  {% style %}
+    .breadcrumb__wrapper {
+      display: none;
+    }
+  {% endstyle %}
+{% endif %}
+
+<div class="sixteen columns" data-initial-width="sixteen" data-sidebar-width="twelve">
+  <div class="product-{{ product.id }}">
+
+    <div class="section product_section js-product_section clearfix
+         is-flex media-position--{{ section.settings.product_images_position }}"
+         data-product-media-supported="{% if product.media != null %}true{% else %}false{% endif %}"
+         data-thumbnails-enabled="{{ section.settings.display_thumbnails }}"
+         data-gallery-arrows-enabled="{{ section.settings.gallery_arrows }}"
+         data-slideshow-speed="{{ section.settings.slideshow_speed }}"
+         data-slideshow-animation="{{ section.settings.slideshow_transition }}"
+         data-thumbnails-position="{{ section.settings.thumbnail_position }}"
+         data-thumbnails-slider-enabled="{{ section.settings.enable_thumbnail_slider }}"
+         data-activate-zoom="{{ section.settings.activate_zoom }}">
+
+      <div class="ten columns {% if section.settings.product_images_position == 'left' %}alpha{% else %}omega{% endif %}" data-initial-width="ten" data-sidebar-width="six">
+        {% render 'product-images',
+                video_looping: section.settings.video_looping,
+                set_product_height: section.settings.set_product_height
+        %}
+      </div>
+
+      <div class="six columns {% if section.settings.product_images_position == 'left' %}omega{% else %}alpha{% endif %}" data-initial-width="six" data-sidebar-width="six">
+        {% assign collection_handles = product.collections | map: 'handle' %}
+        {% assign variant = product.selected_or_first_available_variant %}
+        <h1 class="product__title">{{ product.title }}</h1>
+
+        {% if settings.enable_shopify_product_badges %}
+          <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+        {% endif %}
+
+        {% if section.settings.display_vendor %}
+          <p class="vendor">
+            <span>{{ product.vendor | link_to_vendor }}</span>
+          </p>
+        {% endif %}
+
+        {% if variant.sku != blank and section.settings.display_sku %}
+          <p class="sku">{{ variant.sku }}</p>
+        {% endif %}
+
+        {% render 'size-chart-popup' %}
+
+        <div class="product__price-container {% if variant.available == false %}product__price-container--sold-out{% endif %}">
+          {% if collection_handles contains 'coming-soon' %}
+            <p class="product__price">{{ 'collections.general.coming_soon' | t }}</p>
+          {% else %}
+            <p class="product__price">
+              <span content="{{ variant.price | money_without_currency | remove: "," }}" class="{% if variant.compare_at_price > variant.price %}sale{% endif %}">
+                <span class="current-price">
+                  {% if variant.price > 0 %}
+                    <span class="money">
+                      {% render 'price-element', price: variant.price %}
+                    </span>
+                  {% else %}
+                    {{ settings.free_price_text }}
+                  {% endif %}
+                </span>
+              </span>
+              <span class="was-price">
+                {% if variant.price < variant.compare_at_price and variant.available %}
+                  <span class="money">
+                    {% render 'price-element', price: variant.compare_at_price %}
+                  </span>
+                {% endif %}
+              </span>
+            </p>
+            <span class="sold-out-text">
+              {% if variant.available == false %}
+                &ndash; {{ 'products.product.sold_out' | t }}
+              {% endif %}
+            </span>
+          {% endif %}
+        </div>
+
+        {% unless collection_handles contains 'coming-soon' %}
+          {% render 'product-notify-me', product: product %}
+          {% render 'product-form', context: 'product' %}
+        {% endunless %}
+
+        {% if settings.enable_shopify_review_comments and settings.review_position == "top" %}
+          <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+        {% endif %}
+
+        {% if section.settings.display_collections or section.settings.display_tags or section.settings.display_type %}
+          <hr />
+        {% endif %}
+
+        <div class="meta">
+          {% if section.settings.display_collections %}
+            <p>
+              <span class="label">{{ 'products.product.collections' | t }}:</span>
+              <span>
+                {% for col in product.collections %}
+                  <a href="{{ col.url }}" title="{{ 'collections.general.link_title' | t: title: col.title }}">{{ col.title }}</a>{% unless forloop.last %},{% endunless %}
+                {% endfor %}
+              </span>
+            </p>
+          {% endif %}
+
+          {% if section.settings.display_tags %}
+            <p>
+              {% for tag in product.tags %}
+                {% if forloop.first %}
+                  <span class="label">{{ 'products.product.tags' | t }}:</span>
+                {% endif %}
+
+                {% unless tag contains 'meta-' %}
+                  <span>
+                    <a href="{{ routes.collections_url }}/{% if collection %}{{ collection.handle }}{% else %}all{% endif %}/{{ tag | handle }}" title="{{ 'products.product.products_tagged' | t: tag: tag }}">{{ tag }}</a>{% unless forloop.last %},{% endunless %}
+                  </span>
+                {% endunless %}
+              {% endfor %}
+            </p>
+          {% endif %}
+
+          {% if section.settings.display_type %}
+            <p>
+              <span class="label">{{ 'products.product.product_types' | t }}:</span> <span>{{ product.type | link_to_type }}</span>
+            </p>
+          {% endif %}
+        </div>
+
+        <div class="social_links">
+          {% if section.settings.display_social_buttons %}
+            {% render 'social-buttons', context: 'product' %}
+          {% endif %}
+        </div>
+
+        {% if collection %}
+          <hr />
+            <p class="meta">
+              {% if collection.next_product %}
+                {% capture next_url %}{{ collection.next_product }}{% endcapture %}
+                <span class="right">
+                  {{ 'products.general.next_product_html' | t | link_to: next_url }}
+                </span>
+              {% endif %}
+
+              {% if collection.previous_product %}
+                {% capture prev_url %}{{ collection.previous_product }}{% endcapture %}
+                  <span class="left">
+                    {{ 'products.general.previous_product_html' | t | link_to: prev_url }}
+                  </span>
+              {% endif %}
+            </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <br class="clear" />
+  <div class="section clearfix">
+    <div class="description">
+      {{ product.description }}
+    </div>
+  </div>
+
+  {% if settings.enable_shopify_review_comments and settings.review_position == "bottom" %}
+    <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+  {% endif %}
+</div>
+
+{% if section.settings.set_product_height %}
+  {% style %}
+    .product_slider model-viewer {
+      min-height: {{ section.settings.product_height }}px;
+    }
+
+    .product_slider .product-gallery__main img,
+    .product_slider .product-gallery__main .plyr--html5 video,
+    .product_slider .product-gallery__main .plyr--youtube {
+      max-height: {{ section.settings.product_height }}px;
+    }
+  {% endstyle %}
+{% endif %}
+
+{% style %}
+  .shopify-model-viewer-ui model-viewer {
+    --progress-bar-height: 2px;
+    --progress-bar-color: {{ settings.regular_color }};
+  }
+{% endstyle %}
+
+{% if product.media %}
+  <script>
+    window.ShopifyXR=window.ShopifyXR||function(){(ShopifyXR.q=ShopifyXR.q||[]).push(arguments)}
+      {% assign models = product.media | where: 'media_type', 'model' | json %}
+      ShopifyXR('addModels', {{ models }});
+  </script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Product bottom",
+  "class": "product-template-section product-description-bottom clearfix",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "product_breadcrumb",
+      "label": "Show breadcrumb links",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Product gallery"
+    },
+    {
+      "type": "checkbox",
+      "id": "display_thumbnails",
+      "label": "Show thumbnails",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "gallery_arrows",
+      "label": "Show arrows",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "activate_zoom",
+      "label": "Magnify product images on hover",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "slideshow_speed",
+      "label": "Gallery speed",
+      "min": 0,
+      "max": 6,
+      "unit": "sec",
+      "default": 0,
+      "info": "Set to 0 to disable autoplay."
+    },
+    {
+      "type": "select",
+      "id": "slideshow_transition",
+      "label": "Gallery transition",
+      "default": "slide",
+      "options": [
+        {
+          "value": "slide",
+          "label": "Slide"
+        },
+        {
+          "value": "fade",
+          "label": "Fade"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "thumbnail_position",
+      "label": "Thumbnails",
+      "default": "bottom-thumbnails",
+      "options": [
+        {
+          "value": "left-thumbnails",
+          "label": "Left"
+        },
+        {
+          "value": "right-thumbnails",
+          "label": "Right"
+        },
+        {
+          "value": "bottom-thumbnails",
+          "label": "Bottom"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_thumbnail_slider",
+      "label": "Enable thumbnail slider",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Product information"
+    },
+    {
+      "type": "checkbox",
+      "id": "display_tags",
+      "label": "Show tags",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_type",
+      "label": "Show type",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_vendor",
+      "label": "Show vendor",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_sku",
+      "label": "Show SKU",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "display_social_buttons",
+      "label": "Show social media share icons",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "display_collections",
+      "label": "Show collections",
+      "default": false
+    },
+    {
+      "type": "radio",
+      "id": "product_description_position",
+      "label": "Description position",
+      "default": "top",
+      "options": [
+        {
+          "value": "top",
+          "label": "Above 'add to cart'"
+        },
+        {
+          "value": "bottom",
+          "label": "Below 'add to cart'"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Dynamic checkout button"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_payment_button",
+      "label": "Show dynamic checkout button",
+      "default": true,
+      "info": "Each customer will see their preferred payment method from those available on your store, such as PayPal or Apple Pay. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)"
+    },
+    {
+      "type": "header",
+      "content": "Media",
+      "info": "Learn more about [media types](https://help.shopify.com/en/manual/products/product-media)"
+    },
+    {
+      "type": "radio",
+      "id": "product_images_position",
+      "label": "Media position",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "set_product_height",
+      "label": "Set height of product media",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "product_height",
+      "label": "Product media height",
+      "min": 200,
+      "max": 800,
+      "step": 10,
+      "default": 500,
+      "unit": "px"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_looping",
+      "label": "Enable video looping",
+      "default": false
+    }
+  ]
+}
+{% endschema %}
